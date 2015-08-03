@@ -5,10 +5,14 @@
 #include <fstream>
 #include <limits>
 #include <iostream>
+#include <string>
+#include <mesh.h>
 
 #include "light.h"
 #include "material.h"
 #include "camera.h"
+#include "ConfigLoader.hpp"
+#include "rapidxml.hpp"
 
 class OpenGLWidget : public QOpenGLWidget , protected QOpenGLFunctions
 {
@@ -45,44 +49,14 @@ private:
     Light light;
     Material material;
 
+    QVector4D ambientProduct;
+    QVector4D diffuseProduct;
+    QVector4D specularProduct;
+
     QMatrix4x4 modelView, projectionMatrix;
-    /*
-    QOpenGLBuffer * vboVertices ;
-    QOpenGLBuffer * vboIndices ;
-    QOpenGLBuffer * vboNormals ;
-    QOpenGLBuffer * vboColors ;
 
-    QOpenGLBuffer * vbocoordText ;
-    QOpenGLTexture * texture ;
-    QOpenGLTexture * textureLayer ;
-    QImage image;
-    QImage imageLayer;
+    std::list<Mesh*> objects;
 
-    QVector4D * tangents;
-    QVector3D * bitangents;
-
-    QVector4D * vertices ;
-    QVector4D * colors ;
-    QVector3D * normals;
-    unsigned int * indices ;
-
-    QVector2D * texCoords;
-
-
-
-    //Shaders
-    QOpenGLShader * vertexShader ;
-    QOpenGLShader * fragmentShader ;
-    QOpenGLShaderProgram * shaderProgram ;
-
-
-    unsigned int numVertices ;
-    unsigned int numFaces ;
-
-
-    QVector3D midPoint ;
-    double invDiag ;
-*/
 signals :
     void statusBarMessage ( QString ns ) ;
 

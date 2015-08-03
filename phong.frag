@@ -2,12 +2,14 @@
 in vec3 fN ;
 in vec3 fE ;
 in vec3 fL ;
+in vec2 fTextCoord ;
 
 uniform vec4 ambientProduct ;
 uniform vec4 diffuseProduct ;
 uniform vec4 specularProduct ;
-
 uniform float shininess ;
+
+uniform sampler2D colorTexture ;
 
 out vec4 frag_color ;
 
@@ -21,7 +23,7 @@ void main (){
     float Kd = max ( NdotL , 0.0) ;
     float Ks = ( NdotL < 0.0) ? 0.0 : pow ( max ( dot (R , E ) , 0.0) , shininess ) ;
 
-    vec4 diffuse = Kd * diffuseProduct ;
+    vec4 diffuse = Kd * diffuseProduct * texture ( colorTexture , fTextCoord );
     vec4 specular = Ks * specularProduct ;
     vec4 ambient = ambientProduct ;
 

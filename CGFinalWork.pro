@@ -17,13 +17,21 @@ SOURCES += main.cpp\
     openglwidget.cpp \
     camera.cpp \
     light.cpp \
-    material.cpp
+    material.cpp \
+    ConfigLoader.cpp \
+    mesh.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
     camera.h \
     light.h \
-    material.h
+    material.h \
+    ConfigLoader.hpp \
+    rapidxml.hpp \
+    rapidxml_iterators.hpp \
+    rapidxml_print.hpp \
+    rapidxml_utils.hpp \
+    mesh.h
 
 FORMS    += mainwindow.ui
 

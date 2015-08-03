@@ -36,6 +36,11 @@ void OpenGLWidget :: initializeGL () {
     connect (&timer , SIGNAL ( timeout () ) , this , SLOT ( animate () ) ) ;
 
     timer.start (0) ;
+
+
+    objects.push_back( new Mesh("bomberman", "bomberman.mesh.xml") );
+
+
 }
 
 void OpenGLWidget :: resizeGL (int w , int h ) {
@@ -49,67 +54,91 @@ void OpenGLWidget :: resizeGL (int w , int h ) {
 
 void OpenGLWidget :: paintGL () {
     glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) ;
-/*
-    if (! vboVertices )
-        return ;
 
-    modelView . setToIdentity () ;
-    modelView . lookAt ( camera . eye , camera . at , camera . up ) ;
-    modelView . rotate ( trackBall . getRotation () ) ;
-    modelView . scale ( invDiag , invDiag , invDiag ) ;
-    modelView . translate ( - midPoint );
+//    qDebug() << "paintGL 1";
 
-    shaderProgram -> bind () ;
+    if( objects.size() == 0 ) return;
 
-    QVector4D ambientProduct = light.ambient * material.ambient ;
-    QVector4D diffuseProduct = light.diffuse * material.diffuse ;
-    QVector4D specularProduct = light.specular * material.specular ;
+    std::list<Mesh*>::iterator object = objects.begin();
 
-    shaderProgram -> setUniformValue ("lightPosition", light.position ) ;
-    shaderProgram -> setUniformValue ("ambientProduct", ambientProduct ) ;
-    shaderProgram -> setUniformValue ("diffuseProduct", diffuseProduct ) ;
-    shaderProgram -> setUniformValue ("specularProduct", specularProduct ) ;
-    shaderProgram -> setUniformValue ("shininess", static_cast < GLfloat >( material.shininess ) ) ;
+//    qDebug() << "paintGL 2";
+    Mesh * obj;
+    //    qDebug() << "paintGL 3";
 
-    shaderProgram -> setUniformValue ("light.position", QVector4D(0.5, 0.5, 0.5, 1) ) ;
+    while( object != objects.end() ){
+//        qDebug() << "paintGL 4";
+        obj = (*object);
 
-    shaderProgram -> setUniformValue ("modelView", modelView ) ;
-    shaderProgram -> setUniformValue ("normalMatrix", modelView.normalMatrix () ) ;
-    shaderProgram -> setUniformValue ("projectionMatrix", projectionMatrix );
+//        qDebug() << "paintGL 5";
+        modelView.setToIdentity() ;
+        modelView.lookAt( camera.eye , camera.at , camera.up );
+        modelView.scale( 1 , 1 , 1 ) ;
+        modelView.translate( QVector3D(0, 0, -4) );
+        modelView.rotate(180, 0, 1, 0);
 
 
-    vboVertices -> bind () ;
-    shaderProgram -> enableAttributeArray ("vPosition") ;
-    shaderProgram -> setAttributeBuffer ("vPosition", GL_FLOAT , 0 , 4 , 0) ;
+        obj->shaderProgram->bind();
+//        qDebug() << "paintGL 6";
 
-    vboNormals->bind();
-    shaderProgram -> enableAttributeArray ("vNormal") ;
-    shaderProgram -> setAttributeBuffer ("vNormal", GL_FLOAT , 0 , 3 , 0) ;
+        ambientProduct = light.ambient * obj->material->ambient ;
+        diffuseProduct = light.diffuse * obj->material->diffuse ;
+        specularProduct = light.specular * obj->material->specular ;
 
-    vboIndices -> bind () ;
+//        qDebug() << "paintGL 7";
 
-    vbocoordText -> bind ();
-    shaderProgram -> enableAttributeArray ("vcoordText") ;
-    shaderProgram -> setAttributeBuffer ("vcoordText", GL_FLOAT , 0 , 2 , 0) ;
+        obj->shaderProgram -> setUniformValue ("lightPosition", light.position ) ;
+        obj->shaderProgram -> setUniformValue ("ambientProduct", ambientProduct ) ;
+        obj->shaderProgram -> setUniformValue ("diffuseProduct", diffuseProduct ) ;
+        obj->shaderProgram -> setUniformValue ("specularProduct", specularProduct ) ;
+        obj->shaderProgram -> setUniformValue ("shininess", static_cast < GLfloat >( material.shininess ) ) ;
 
-    texture -> bind (0) ;
-    shaderProgram -> setUniformValue ("colorTexture", 0) ;
+        obj->shaderProgram -> setUniformValue ("modelView", modelView ) ;
+        obj->shaderProgram -> setUniformValue ("normalMatrix", modelView.normalMatrix () ) ;
+        obj->shaderProgram -> setUniformValue ("projectionMatrix", projectionMatrix );
 
-    textureLayer -> bind (1) ;
-    shaderProgram -> setUniformValue ("colorTextureLayer", 1) ;
+//        qDebug() << "paintGL 8";
 
+        obj->vboVertices-> bind () ;
+        obj->shaderProgram -> enableAttributeArray ("vPosition") ;
+        obj->shaderProgram -> setAttributeBuffer ("vPosition", GL_FLOAT , 0 , 4 , 0) ;
 
-    glDrawElements ( GL_TRIANGLES , numFaces * 3 , GL_UNSIGNED_INT , 0) ;
+//        qDebug() << "paintGL 9";
 
-    texture->release(0);
-    textureLayer->release(1);
+        obj->vboNormals->bind();
+        obj->shaderProgram -> enableAttributeArray ("vNormal") ;
+        obj->shaderProgram -> setAttributeBuffer ("vNormal", GL_FLOAT , 0 , 3 , 0) ;
 
-    vbocoordText->release();
-    vboIndices -> release () ;
-    vboVertices -> release () ;
-    vboVertices->release();
-    shaderProgram -> release () ;
-    */
+//        qDebug() << "paintGL 10";
+
+        obj->vboIndices -> bind () ;
+
+//        qDebug() << "paintGL 11";
+
+        obj->vbocoordText -> bind ();
+        obj->shaderProgram -> enableAttributeArray ("vcoordText") ;
+        obj->shaderProgram -> setAttributeBuffer ("vcoordText", GL_FLOAT , 0 , 2 , 0) ;
+
+//        qDebug() << "paintGL 12";
+
+        obj->material->texture -> bind (0) ;
+        obj->shaderProgram -> setUniformValue ("colorTexture", 0) ;
+
+//        qDebug() << "paintGL 20";
+
+        glDrawElements ( GL_TRIANGLES , obj->facesCount * 3 , GL_UNSIGNED_INT , 0) ;
+//        qDebug() << "paintGL 21";
+
+        obj->shaderProgram->release();
+        obj->vboVertices->release();
+        obj->vboNormals->release();
+        obj->vboIndices->release();
+        obj->vbocoordText->release();
+        obj->material->texture->release(0);
+
+//        qDebug() << "paintGL 22";
+
+        object++;
+    }
 }
 
 
