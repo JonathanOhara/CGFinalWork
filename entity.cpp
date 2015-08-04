@@ -1,6 +1,6 @@
-#include "mesh.h"
+#include "entity.h"
 
-Mesh::Mesh(string name, string fileName){
+Entity::Entity(string name, string fileName){
     this->name = name;
     this->fileName = fileName;
 
@@ -17,18 +17,22 @@ Mesh::Mesh(string name, string fileName){
     fragmentShader = NULL ;
 
     textureCoordinates = NULL;
+    tangents = NULL;
 
     readMeshXml();
     readMaterial();
+    generateTangents();
 
     createVBOs();
+
+    transformation.setToIdentity() ;
 }
 
-Mesh::~Mesh(){
+Entity::~Entity(){
 
 }
 
-void Mesh::readMeshXml(){
+void Entity::readMeshXml(){
 
     QString path;
     rapidxml::xml_document<> doc;
@@ -113,24 +117,26 @@ void Mesh::readMeshXml(){
     }
     qDebug() << "Done.";
 
-    skeletonFileName = skeletonLink->first_attribute("name")->value();
-    qDebug() << "Skeleton File Name: " << skeletonFileName.c_str();
+    if( skeletonLink != NULL ){
+        skeletonFileName = skeletonLink->first_attribute("name")->value();
+        qDebug() << "Skeleton File Name: " << skeletonFileName.c_str();
 
-    qDebug() << "Loading bone assigments...";
-    i = 0;
-    for ( child = faces->first_node("vertexboneassignment"); child; child = child->next_sibling()){
+        qDebug() << "Loading bone assigments...";
+        i = 0;
+        for ( child = faces->first_node("vertexboneassignment"); child; child = child->next_sibling()){
 
-        int boneIndex = atoi( child->first_attribute("boneindex")->value() );
-        int vertexIndex = atoi( child->first_attribute("vertexindex")->value() );
-        float weight = atof( child->first_attribute("weight")->value() );
+            int boneIndex = atoi( child->first_attribute("boneindex")->value() );
+            int vertexIndex = atoi( child->first_attribute("vertexindex")->value() );
+            float weight = atof( child->first_attribute("weight")->value() );
 
-        i++;
+            i++;
+        }
+        qDebug() << "Done.";
     }
-    qDebug() << "Done.";
 
 }
 
-void Mesh::readMaterial(){
+void Entity::readMaterial(){
     QString path;
 
     material = new Material();
@@ -147,7 +153,7 @@ void Mesh::readMaterial(){
 
     sh::ConfigNode *rootNode, *techniqueNode, *passNode, *textureUnitNode, *ambient, *diffuse, *specular, *emissive;
 
-    rootNode = loader->getConfigScript("material", "bomberman_material");
+    rootNode = loader->getConfigScript("material", materialName);
     techniqueNode = rootNode->findChild("technique");
     passNode = techniqueNode->findChild("pass");
     textureUnitNode = passNode->findChild("texture_unit");
@@ -183,6 +189,8 @@ void Mesh::readMaterial(){
     path = QDir::currentPath();
     path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
     path += "/CGFinalWork/media/images/" + material->textureName;
+
+    qDebug() << "Loading image: " << path;
 
     QImage image;
     image . load ( path ) ;
@@ -223,7 +231,59 @@ void Mesh::readMaterial(){
     delete loader;
 }
 
-void Mesh::createVBOs(){
+void Entity::generateTangents () {
+    if ( tangents ) delete [] tangents ;
+    tangents = new QVector4D [ vertexCount ];
+    QVector3D * bitangents = new QVector3D [ vertexCount ];
+    for ( unsigned int i = 0; i < facesCount ; i ++) {
+        unsigned int i1 = indices [ i * 3 ];
+        unsigned int i2 = indices [ i * 3 + 1];
+        unsigned int i3 = indices [ i * 3 + 2];
+        QVector3D E = vertices [ i1 ]. toVector3D () ;
+        QVector3D F = vertices [ i2 ]. toVector3D () ;
+        QVector3D G = vertices [ i3 ]. toVector3D () ;
+        QVector2D stE = textureCoordinates [ i1 ];
+        QVector2D stF = textureCoordinates [ i2 ];
+        QVector2D stG = textureCoordinates [ i3 ];
+        QVector3D P = F - E ;
+        QVector3D Q = G - E ;
+        QVector2D st1 = stF - stE ;
+        QVector2D st2 = stG - stE ;
+
+        QMatrix2x2 M ;
+        M (0 ,0) = st2 . y () ; M (0 ,1) = - st1 . y () ;
+        M (1 ,0) = - st2 . x () ; M (1 ,1) = st1 . x () ;
+        M *= (1.0 / ( st1 . x () * st2 . y () - st2 . x () * st1 . y () ) ) ;
+
+        QVector4D T = QVector4D ( M (0 ,0) * P . x () + M (0 ,1) * Q . x () ,
+            M (0 ,0) * P . y () + M (0 ,1) * Q . y () ,
+            M (0 ,0) * P . z () + M (0 ,1) * Q . z () , 0.0);
+
+        QVector3D B = QVector3D ( M (1 ,0) * P . x () + M (1 ,1) * Q . x () ,
+        M (1 ,0) * P . y () + M (1 ,1) * Q . y () ,
+        M (1 ,0) * P . z () + M (1 ,1) * Q . z () ) ;
+        tangents [ i1 ] += T ;
+        tangents [ i2 ] += T ;
+        tangents [ i3 ] += T ;
+        bitangents [ i1 ] += B ;
+        bitangents [ i2 ] += B ;
+        bitangents [ i3 ] += B ;
+    }
+
+    for ( unsigned int i = 0; i < vertexCount ; i ++) {
+        const QVector3D & n = normals [ i ];
+        const QVector4D & t = tangents [ i ];
+        tangents [ i ] = ( t - n *
+        QVector3D :: dotProduct (n , t . toVector3D () ) ) .
+        normalized () ;
+        QVector3D b = QVector3D :: crossProduct (n , t . toVector3D () ) ;
+        double hand = QVector3D :: dotProduct (b , bitangents [ i ]) ;
+        tangents [ i ]. setW (( hand < 0.0) ? -1.0 : 1.0) ;
+    }
+    delete [] bitangents ;
+}
+
+void Entity::createVBOs(){
     vboVertices = new QOpenGLBuffer ( QOpenGLBuffer :: VertexBuffer ) ;
     vboVertices -> create () ;
     vboVertices -> bind () ;
@@ -261,9 +321,19 @@ void Mesh::createVBOs(){
     vboNormals -> allocate ( normals , vertexCount * sizeof ( QVector3D ) ) ;
     delete [] normals ;
     normals = NULL ;
+
+
+
+    vboTangents = new QOpenGLBuffer ( QOpenGLBuffer :: VertexBuffer ) ;
+    vboTangents -> create () ;
+    vboTangents -> bind () ;
+    vboTangents -> setUsagePattern ( QOpenGLBuffer :: StaticDraw ) ;
+    vboTangents -> allocate ( tangents , vertexCount * sizeof ( QVector4D ) ) ;
+    delete [] tangents ;
+    tangents = NULL ;
 }
 
-void Mesh::destroyVBOs(){
+void Entity::destroyVBOs(){
     if ( vboVertices ) {
          vboVertices -> release () ;
          vboVertices -> destroy ();
@@ -291,4 +361,74 @@ void Mesh::destroyVBOs(){
          delete vboNormals;
          vboNormals = NULL;
      }
+
+     if( vboTangents ){
+         vboTangents->release();
+         vboTangents->destroy();
+         delete vboTangents;
+         vboTangents = NULL;
+     }
+}
+
+void Entity::setPosition( QVector3D position ){
+   transformation.setColumn( 3, QVector4D( position, 1 ) );
+}
+
+void Entity::setScale( QVector3D scale ){
+   transformation.scale( scale );
+}
+
+void Entity::rotate( float angle, QVector3D vector ){
+   transformation.rotate( angle, vector );
+}
+
+void Entity::translate( QVector3D translate ){
+   transformation.translate( translate );
+}
+
+/******************** GETTERS AND SETTERS ********************/
+string Entity::getName(){
+    return name;
+}
+string Entity::getfileName(){
+    return fileName;
+}
+QOpenGLBuffer * Entity::getVboVertices(){
+    return vboVertices;
+}
+QOpenGLBuffer * Entity::getVboIndices(){
+    return vboIndices;
+}
+QOpenGLBuffer * Entity::getVbocoordText(){
+    return vbocoordText;
+}
+QOpenGLBuffer * Entity::getVboNormals(){
+    return vboNormals;
+}
+QOpenGLBuffer * Entity::getVboTangents(){
+    return vboTangents;
+}
+QOpenGLShader * Entity::getVertexShader(){
+    return vertexShader;
+}
+QOpenGLShader * Entity::getFragmentShader(){
+    return fragmentShader;
+}
+QOpenGLShaderProgram * Entity::getShaderProgram(){
+    return shaderProgram;
+}
+QMatrix4x4 Entity::getTransformation(){
+    return transformation;
+}
+Material * Entity::getMaterial(){
+    return material;
+}
+string Entity::getMaterialName(){
+    return materialName;
+}
+int Entity::getVertexCount(){
+    return vertexCount;
+}
+int Entity::getFacesCount(){
+    return facesCount;
 }

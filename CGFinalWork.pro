@@ -12,14 +12,15 @@ TARGET = CGFinalWork
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
+SOURCES +=\
         mainwindow.cpp \
     openglwidget.cpp \
     camera.cpp \
     light.cpp \
     material.cpp \
     ConfigLoader.cpp \
-    mesh.cpp
+    main.cpp \
+    entity.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -31,7 +32,7 @@ HEADERS  += mainwindow.h \
     rapidxml_iterators.hpp \
     rapidxml_print.hpp \
     rapidxml_utils.hpp \
-    mesh.h
+    entity.h
 
 FORMS    += mainwindow.ui
 

@@ -6,7 +6,7 @@
 #include <limits>
 #include <iostream>
 #include <string>
-#include <mesh.h>
+#include <entity.h>
 
 #include "light.h"
 #include "material.h"
@@ -42,6 +42,8 @@ protected:
     void resizeGL ( int width , int height ) ;
     void paintGL () ;
 
+    void loadLevel();
+
 private:
     QTimer timer;
 
@@ -53,9 +55,10 @@ private:
     QVector4D diffuseProduct;
     QVector4D specularProduct;
 
-    QMatrix4x4 modelView, projectionMatrix;
+    QMatrix4x4 modelView;
+    QMatrix4x4 projectionMatrix;
 
-    std::list<Mesh*> objects;
+    std::list<Entity*> objects;
 
 signals :
     void statusBarMessage ( QString ns ) ;
