@@ -1,14 +1,25 @@
 #include "openglwidget.h"
 
-OpenGLWidget::OpenGLWidget ( QWidget * parent ):  QOpenGLWidget ( parent ) {
+#define LINES 13
+#define COLUMNS 15
 
+OpenGLWidget::OpenGLWidget ( QWidget * parent ):  QOpenGLWidget ( parent ) {
+    player1 = NULL;
+    player2 = NULL;
 }
 
 OpenGLWidget::~OpenGLWidget (){
-    /*
-    destroyVBOs () ;
-    destroyShaders () ;
-    */
+    std::list<Entity*>::iterator object = objects.begin();
+    Entity * obj;
+
+    while( object != objects.end() ){
+        obj = (*object);
+
+        delete obj;
+    }
+
+    if( player1 != NULL ) delete player1;
+    if( player2 != NULL ) delete player2;
 }
 
 void OpenGLWidget :: initializeGL () {
@@ -131,7 +142,8 @@ void OpenGLWidget :: paintGL () {
     }
 //    qDebug() << "paintGL 16";
 
-    gameLogic( elapsedTime.elapsed() );
+    float deltaTime = (float) elapsedTime.elapsed() / 1000;
+    gameLogic( deltaTime );
     elapsedTime.restart();
 }
 
@@ -142,7 +154,6 @@ void OpenGLWidget :: animate (){
 
 //----------------------------------------------------------------------------------------------
 void OpenGLWidget::keyPressEvent( QKeyEvent * event ){
-    qDebug() << "press";
     switch(event->key()){
         case Qt::Key_Escape:
             qApp->quit();
@@ -169,7 +180,14 @@ void OpenGLWidget::keyPressEvent( QKeyEvent * event ){
             camera.eye.setZ( camera.eye.z() + 1 );
         break;
     }
-    qDebug() << camera.eye;
+
+    if( player1 != NULL ) player1->keyPressEvent(event);
+    if( player2 != NULL ) player2->keyPressEvent(event);
+}
+
+void OpenGLWidget::keyReleaseEvent( QKeyEvent * event ){
+    if( player1 != NULL ) player1->keyReleaseEvent(event);
+    if( player2 != NULL ) player2->keyReleaseEvent(event);
 }
 
 void OpenGLWidget :: mouseMoveEvent ( QMouseEvent * event ){
@@ -187,36 +205,34 @@ void OpenGLWidget :: mouseReleaseEvent ( QMouseEvent * event ){
     */
 }
 //----------------------------------------------------------------------------------------------
-void OpenGLWidget::gameLogic(int deltaTime){
-    //qDebug() << deltaTime;
+void OpenGLWidget::gameLogic(float deltaTime){
 
+    if( player1 != NULL ) player1->update(deltaTime);
+    if( player2 != NULL ) player2->update(deltaTime);
 }
 
 void OpenGLWidget::loadLevel(){
-    int LINES, COLUMNS;
-    LINES = 13;
-    COLUMNS = 15;
     char cenario[LINES][COLUMNS] = {
-    {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'},
-    {'X','H','.','.','B','B','B','B','B','B','B','.','.','.','X'},
-    {'X','.','X','B','X','B','X','B','X','B','X','B','X','.','X'},
-    {'X','.','B','B','B','B','B','B','B','B','B','B','B','B','X'},
-    {'X','B','X','B','X','B','X','.','X','B','X','B','X','B','X'},
-    {'X','B','B','B','B','B','B','.','B','B','.','B','B','B','X'},
-    {'X','B','X','B','X','.','.','.','.','.','X','B','X','B','X'},
-    {'X','B','B','B','B','B','B','.','B','B','.','B','.','B','X'},
-    {'X','B','X','B','X','B','X','.','X','B','X','B','X','.','X'},
-    {'X','.','B','B','B','B','B','B','.','B','.','B','B','.','X'},
-    {'X','.','X','B','X','B','X','B','X','B','X','B','X','.','X'},
-    {'X','.','.','.','B','B','.','B','B','B','B','.','.','.','X'},
-    {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'},
+        {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'},
+        {'X','H','.','.','B','B','B','B','B','B','B','.','.','.','X'},
+        {'X','.','X','B','X','B','X','B','X','B','X','B','X','.','X'},
+        {'X','.','B','B','B','B','B','B','B','B','B','B','B','B','X'},
+        {'X','B','X','B','X','B','X','.','X','B','X','B','X','B','X'},
+        {'X','B','B','B','B','B','B','.','B','B','.','B','B','B','X'},
+        {'X','B','X','B','X','.','.','.','.','.','X','B','X','B','X'},
+        {'X','B','B','B','B','B','B','.','B','B','.','B','.','B','X'},
+        {'X','B','X','B','X','B','X','.','X','B','X','B','X','.','X'},
+        {'X','.','B','B','B','B','B','B','.','B','.','B','B','.','X'},
+        {'X','.','X','B','X','B','X','B','X','B','X','B','X','.','X'},
+        {'X','.','.','.','B','B','.','B','B','B','B','.','.','.','X'},
+        {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'},
     };
-
+/*
     Entity * bomberman = new Entity("bomberman", "bomberman.mesh.xml");
     bomberman->setPosition( QVector3D(COLUMNS/2, 0, LINES /2 * -1 -1) );
     bomberman->setScale(QVector3D(0.3f, 0.3f, 0.3f) );
     objects.push_back( bomberman );
-
+*/
     light.position = QVector4D(0 , 10.0f , LINES /2 * -1 , 0.0f);
 
 
@@ -249,8 +265,15 @@ void OpenGLWidget::loadLevel(){
                 break;
             case 'H':
                 ent = new Entity("bomberman", "bomberman.mesh.xml");
-
                 ent->setScale(QVector3D(0.3f, 0.3f, 0.3f) );
+
+                if(player1 == NULL){
+                    player1 = new GamePlayer( ent );
+                }
+
+                if(player2 == NULL){
+                    player2 = new GamePlayer( ent );
+                }
 
                 break;
             }

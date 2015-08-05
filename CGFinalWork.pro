@@ -20,7 +20,8 @@ SOURCES +=\
     material.cpp \
     ConfigLoader.cpp \
     main.cpp \
-    entity.cpp
+    entity.cpp \
+    gamePlayer.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -32,7 +33,8 @@ HEADERS  += mainwindow.h \
     rapidxml_iterators.hpp \
     rapidxml_print.hpp \
     rapidxml_utils.hpp \
-    entity.h
+    entity.h \
+    gamePlayer.h
 
 FORMS    += mainwindow.ui
 

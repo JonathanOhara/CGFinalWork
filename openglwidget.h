@@ -6,13 +6,15 @@
 #include <limits>
 #include <iostream>
 #include <string>
-#include <entity.h>
+
 
 #include "light.h"
 #include "material.h"
 #include "camera.h"
 #include "ConfigLoader.hpp"
 #include "rapidxml.hpp"
+#include "gamePlayer.h"
+#include "entity.h"
 
 class OpenGLWidget : public QOpenGLWidget , protected QOpenGLFunctions
 {
@@ -32,6 +34,7 @@ public :
     void genTangents();
 */
     void keyPressEvent( QKeyEvent * event );
+    void keyReleaseEvent( QKeyEvent * event );
 
     void mouseMoveEvent( QMouseEvent * event );
     void mousePressEvent( QMouseEvent * event );
@@ -44,7 +47,7 @@ protected:
 
     void loadLevel();
 
-    void gameLogic( int deltaTime );
+    void gameLogic( float deltaTime );
 
 private:
     QTimer timer;
@@ -62,6 +65,8 @@ private:
     QMatrix4x4 projectionMatrix;
 
     std::list<Entity*> objects;
+
+    GamePlayer *player1, *player2;
 
 signals :
     void statusBarMessage ( QString ns ) ;

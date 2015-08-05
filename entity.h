@@ -12,6 +12,7 @@
 
 #include "ConfigLoader.hpp"
 #include "Material.h"
+#include "gamePlayer.h"
 
 using namespace std;
 using namespace Qt;
