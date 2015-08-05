@@ -1,12 +1,12 @@
-// block_normal_material genrated by blender2ogre 0.6.0
+// scenario_green_material genrated by blender2ogre 0.6.0
 
-material block_normal_material 
+material scenario_green_material 
 {
     receive_shadows on 
 
     technique
     {
-        pass block_normal_material
+        pass scenario_green_material
         {
             ambient 0.800000011920929 0.800000011920929 0.800000011920929 1.0
             diffuse 0.6400000190734865 0.6400000190734865 0.6400000190734865 1.0
@@ -30,9 +30,9 @@ material block_normal_material
             shading gouraud
             transparent_sorting on
 
-			texture_unit 
+            texture_unit 
             {
-                texture block_normal_uv.png
+                texture scenario_green_uv.png
                 tex_address_mode wrap
                 scale 1.0 1.0
                 tex_coord_set 0

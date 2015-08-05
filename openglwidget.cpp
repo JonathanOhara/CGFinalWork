@@ -22,6 +22,7 @@ void OpenGLWidget :: initializeGL () {
     loadLevel();
 
     timer.start (0) ;
+    elapsedTime.start();
 }
 
 void OpenGLWidget :: resizeGL (int w , int h ) {
@@ -44,27 +45,28 @@ void OpenGLWidget :: paintGL () {
 
 //    qDebug() << "paintGL 2";
     Entity * obj;
-    //    qDebug() << "paintGL 3";
+
 
     modelView.setToIdentity () ;
     modelView.lookAt ( camera.eye , camera.at , camera.up ) ;
 
+//    qDebug() << "paintGL 3";
+
     QMatrix4x4 modelViewMatrix;
 
     while( object != objects.end() ){
-//        qDebug() << "paintGL 4";
         obj = (*object);
 
-//        qDebug() << "paintGL 5";
+//        qDebug() << "paintGL 4";
 
         obj->getShaderProgram()->bind();
-//        qDebug() << "paintGL 6";
+//        qDebug() << "paintGL 5";
 
         ambientProduct = light.ambient * obj->getMaterial()->ambient ;
         diffuseProduct = light.diffuse * obj->getMaterial()->diffuse ;
         specularProduct = light.specular * obj->getMaterial()->specular ;
 
-//        qDebug() << "paintGL 7";
+//        qDebug() << "paintGL 6";
 
         modelViewMatrix = modelView * obj->getTransformation();
 
@@ -78,19 +80,19 @@ void OpenGLWidget :: paintGL () {
         obj->getShaderProgram()->setUniformValue("normalMatrix", modelViewMatrix.normalMatrix() ) ;
         obj->getShaderProgram()->setUniformValue("projectionMatrix", projectionMatrix );
 
-//        qDebug() << "paintGL 8";
+//        qDebug() << "paintGL 7";
 
         obj->getVboVertices()-> bind () ;
         obj->getShaderProgram() -> enableAttributeArray ("vPosition") ;
         obj->getShaderProgram() -> setAttributeBuffer ("vPosition", GL_FLOAT , 0 , 4 , 0) ;
 
-//        qDebug() << "paintGL 9";
+//        qDebug() << "paintGL 8";
 
         obj->getVboNormals()->bind();
         obj->getShaderProgram() -> enableAttributeArray ("vNormal") ;
         obj->getShaderProgram() -> setAttributeBuffer ("vNormal", GL_FLOAT , 0 , 3 , 0) ;
 
-//        qDebug() << "paintGL 95";
+//        qDebug() << "paintGL 9";
 
         obj->getVboTangents()->bind();
         obj->getShaderProgram()->enableAttributeArray ("vTangent") ;
@@ -111,10 +113,10 @@ void OpenGLWidget :: paintGL () {
         obj->getMaterial()->texture -> bind (0) ;
         obj->getShaderProgram() -> setUniformValue ("colorTexture", 0) ;
 
-//        qDebug() << "paintGL 20";
+//        qDebug() << "paintGL 13";
 
         glDrawElements ( GL_TRIANGLES , obj->getFacesCount() * 3 , GL_UNSIGNED_INT , 0) ;
-//        qDebug() << "paintGL 21";
+//       qDebug() << "paintGL 14";
 
         obj->getShaderProgram()->release();
         obj->getVboVertices()->release();
@@ -123,10 +125,14 @@ void OpenGLWidget :: paintGL () {
         obj->getVbocoordText()->release();
         obj->getMaterial()->texture->release(0);
 
-//        qDebug() << "paintGL 22";
+//        qDebug() << "paintGL 15";
 
         object++;
     }
+//    qDebug() << "paintGL 16";
+
+    gameLogic( elapsedTime.elapsed() );
+    elapsedTime.restart();
 }
 
 
@@ -167,55 +173,104 @@ void OpenGLWidget::keyPressEvent( QKeyEvent * event ){
 }
 
 void OpenGLWidget :: mouseMoveEvent ( QMouseEvent * event ){
-    qDebug() << "a";
 }
 void OpenGLWidget :: mousePressEvent ( QMouseEvent * event ){
-    qDebug() << "b";
     /*
     if ( event -> button () & Qt :: LeftButton )
     trackBall . mousePress ( event-> localPos () ) ;
     */
 }
 void OpenGLWidget :: mouseReleaseEvent ( QMouseEvent * event ){
-    qDebug() << "c";
     /*
     if ( event -> button () == Qt :: LeftButton )
     trackBall . mouseRelease ( event-> localPos () ) ;
     */
 }
 //----------------------------------------------------------------------------------------------
+void OpenGLWidget::gameLogic(int deltaTime){
+    //qDebug() << deltaTime;
+
+}
+
 void OpenGLWidget::loadLevel(){
-    char cenario[13][15] = {
+    int LINES, COLUMNS;
+    LINES = 13;
+    COLUMNS = 15;
+    char cenario[LINES][COLUMNS] = {
     {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'},
     {'X','H','.','.','B','B','B','B','B','B','B','.','.','.','X'},
     {'X','.','X','B','X','B','X','B','X','B','X','B','X','.','X'},
     {'X','.','B','B','B','B','B','B','B','B','B','B','B','B','X'},
     {'X','B','X','B','X','B','X','.','X','B','X','B','X','B','X'},
     {'X','B','B','B','B','B','B','.','B','B','.','B','B','B','X'},
-    {'X','B','X','B','X','B','X','.','X','.','X','B','X','B','X'},
+    {'X','B','X','B','X','.','.','.','.','.','X','B','X','B','X'},
     {'X','B','B','B','B','B','B','.','B','B','.','B','.','B','X'},
-    {'X','B','X','B','X','B','X','B','X','B','X','B','X','.','X'},
+    {'X','B','X','B','X','B','X','.','X','B','X','B','X','.','X'},
     {'X','.','B','B','B','B','B','B','.','B','.','B','B','.','X'},
     {'X','.','X','B','X','B','X','B','X','B','X','B','X','.','X'},
     {'X','.','.','.','B','B','.','B','B','B','B','.','.','.','X'},
     {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'},
     };
 
-    light.position = QVector4D(6.0f , 120.0f , 80.0f , 0.0f);
+    Entity * bomberman = new Entity("bomberman", "bomberman.mesh.xml");
+    bomberman->setPosition( QVector3D(COLUMNS/2, 0, LINES /2 * -1 -1) );
+    bomberman->setScale(QVector3D(0.3f, 0.3f, 0.3f) );
+    objects.push_back( bomberman );
+
+    light.position = QVector4D(0 , 10.0f , LINES /2 * -1 , 0.0f);
+
+
+    camera.eye = QVector3D( COLUMNS / 2, 10.0f, -1.0f );
+    camera.at  = QVector3D( COLUMNS / 2, 0.0f, LINES / 2 * - 1 + 0.5f);
+
+    qDebug() << light.position;
 
     Entity * field = new Entity( "field", "scenario_green.mesh.xml" );
     field->translate( QVector3D(6, -1.0f ,0) );
     field->setScale( QVector3D(10.0f, 10.0f, 10.0f) );
     field->rotate( -90, QVector3D(1, 0, 0) );
-
-
     objects.push_back(field);
 
+    for( int i = 0; i < LINES; i++ ){
+        for( int j = 0; j < COLUMNS; j++){
+            Entity * ent = NULL;
 
+            switch( cenario[i][j] ){
+            case 'X':
+                ent = new Entity( "hard_block", "block_hard.mesh.xml" );
+
+                ent->setScale( QVector3D( 0.5f, 0.5f, 0.5f ) );
+                break;
+            case 'B':
+                ent = new Entity( "normal_block", "block_normal.mesh.xml" );
+
+                ent->setScale( QVector3D( 0.5f, 0.5f, 0.5f ) );
+
+                break;
+            case 'H':
+                ent = new Entity("bomberman", "bomberman.mesh.xml");
+
+                ent->setScale(QVector3D(0.3f, 0.3f, 0.3f) );
+
+                break;
+            }
+
+            if( ent != NULL ){
+                ent->setPosition( QVector3D( j, 0, i - LINES ) );
+                objects.push_back( ent );
+            }
+        }
+       // if( i == 2 )break;
+    }
+    qDebug() << " Level Load End...";
+
+
+    /*
     Entity * bomberman = new Entity("bomberman", "bomberman.mesh.xml");
     bomberman->setPosition( QVector3D(6, 0, 0) );
     bomberman->setScale(QVector3D(0.3f, 0.3f, 0.3f) );
     objects.push_back( bomberman );
+    */
 
     /*
     Entity * bomberman2 = new Entity("bomberman2", "bomberman.mesh.xml");

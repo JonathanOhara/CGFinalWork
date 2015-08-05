@@ -44,8 +44,11 @@ protected:
 
     void loadLevel();
 
+    void gameLogic( int deltaTime );
+
 private:
     QTimer timer;
+    QElapsedTimer elapsedTime;
 
     Camera camera;
     Light light;
