@@ -1,4 +1,5 @@
 #include "entity.h"
+#include <math.h>
 
 Entity::Entity(string name, string fileName){
     this->name = name;
@@ -370,12 +371,38 @@ void Entity::destroyVBOs(){
      }
 }
 
+QVector3D Entity::getPosition(){
+    return transformation.column(3).toVector3D();
+}
+
 void Entity::setPosition( QVector3D position ){
    transformation.setColumn( 3, QVector4D( position, 1 ) );
 }
 
+void Entity::roundX(){
+    transformation.data()[12] = round( transformation.data()[12] );
+}
+
+void Entity::roundZ(){
+    transformation.data()[14] = round( transformation.data()[14] );
+}
+
 void Entity::setScale( QVector3D scale ){
    transformation.scale( scale );
+}
+
+void Entity::clearRotation(){
+    //qDebug() << "antes " << transformation;
+    transformation.data()[0] = abs(transformation.data()[0] + transformation.data()[1] + transformation.data()[2]  + transformation.data()[3]);
+    transformation.data()[5] = abs(transformation.data()[4] + transformation.data()[5] + transformation.data()[6]  + transformation.data()[7]);
+    transformation.data()[10] = abs(transformation.data()[8] + transformation.data()[9] + transformation.data()[10] + transformation.data()[11]);
+
+
+    transformation.data()[1] = 0;transformation.data()[2] = 0;transformation.data()[3] = 0;transformation.data()[4] = 0;
+    transformation.data()[6] = 0;transformation.data()[7] = 0;transformation.data()[8] = 0;transformation.data()[9] = 0;
+    transformation.data()[11] = 0;
+
+    //qDebug() << "depois " << transformation;
 }
 
 void Entity::rotate( float angle, QVector3D vector ){

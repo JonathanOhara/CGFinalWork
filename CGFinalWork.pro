@@ -21,7 +21,8 @@ SOURCES +=\
     ConfigLoader.cpp \
     main.cpp \
     entity.cpp \
-    gamePlayer.cpp
+    gamePlayer.cpp \
+    scenario.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -34,7 +35,8 @@ HEADERS  += mainwindow.h \
     rapidxml_print.hpp \
     rapidxml_utils.hpp \
     entity.h \
-    gamePlayer.h
+    gamePlayer.h \
+    scenario.h
 
 FORMS    += mainwindow.ui
 

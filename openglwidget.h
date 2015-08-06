@@ -15,6 +15,7 @@
 #include "rapidxml.hpp"
 #include "gamePlayer.h"
 #include "entity.h"
+#include "scenario.h"
 
 class OpenGLWidget : public QOpenGLWidget , protected QOpenGLFunctions
 {

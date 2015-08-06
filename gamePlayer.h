@@ -10,18 +10,26 @@ class Entity;
 class GamePlayer
 {
 public:
-    GamePlayer( Entity * entity );
+    GamePlayer( Entity * entity, char scenarioID );
     ~GamePlayer();
 
 
     void update( float elapsedTime );
 
-    void keyPressEvent( QKeyEvent * event );
-    void keyReleaseEvent( QKeyEvent * event );
+    void startMoveUp();
+    void startMoveLeft();
+    void startMoveRight();
+    void startMoveDown();
+
+    void stopMoveUp();
+    void stopMoveLeft();
+    void stopMoveRight();
+    void stopMoveDown();
 
 private:
     Entity * entity;
 
+    char scenarioID;
     int movingKey;
 };
 

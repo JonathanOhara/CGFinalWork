@@ -36,8 +36,14 @@ public:
     QOpenGLShader * getFragmentShader();
     QOpenGLShaderProgram * getShaderProgram();
 
+    QVector3D getPosition();
     void setPosition( QVector3D position );
+
+    void roundX();
+    void roundZ();
+
     void setScale( QVector3D scale );
+    void clearRotation();
     void rotate( float angle, QVector3D vector );
     void translate( QVector3D translate );
     QMatrix4x4 getTransformation();
@@ -85,7 +91,6 @@ private:
     string materialName;
     int vertexCount;
     int facesCount;
-
 
 };
 
