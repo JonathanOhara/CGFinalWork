@@ -42,8 +42,8 @@ void Entity::readMeshXml(){
     rapidxml::xml_node<> *root, *geometry, *subMeshes, *skeletonLink, *boneAssignments, *subMesh, *faces, *vertexBuffer, *child, *position, *normal, *texCoord;
     int i;
 
-    path = QDir::currentPath();
-    path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
+    path = qApp->applicationDirPath();
+    //path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
     path += "/CGFinalWork/media/mesh/" + QString(fileName.c_str());
 
     qDebug() << "Loading mesh: " << path;
@@ -133,8 +133,8 @@ void Entity::readMaterial(){
 
     material = new Material();
 
-    path = QDir::currentPath();
-    path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
+    path = qApp->applicationDirPath();
+    //path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
     path += "/CGFinalWork/media/material/" + QString(materialName.c_str()) + ".material";
 
     qDebug() << "Loading material file: " << path;
@@ -183,8 +183,8 @@ void Entity::readMaterial(){
     material->textureName = textureUnitNode->findChild("texture")->getValue().c_str();
     material->map1Name = textureUnitNode->findChild("map1") != NULL ? textureUnitNode->findChild("map1")->getValue().c_str() : "";
 
-    path = QDir::currentPath();
-    path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
+    path = qApp->applicationDirPath();
+    //path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
     path += "/CGFinalWork/media/images/" + material->textureName;
 
     qDebug() << "Loading image: " << path;
@@ -198,8 +198,8 @@ void Entity::readMaterial(){
     material->texture->setWrapMode( QOpenGLTexture::Repeat ) ;
 
     if( material->map1Name != "" ){
-        path = QDir::currentPath();
-        path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
+        path = qApp->applicationDirPath();
+        //path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
         path += "/CGFinalWork/media/images/" + material->map1Name;
 
         qDebug() << "Loading image: " << path;
