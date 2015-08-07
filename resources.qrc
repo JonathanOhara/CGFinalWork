@@ -3,10 +3,14 @@
         <file>phong.vert</file>
         <file>simple_texture.vert</file>
         <file>normal_map.vert</file>
+        <file>part.vert</file>
+        <file>pp.vert</file>
     </qresource>
     <qresource prefix="/shaders/frag">
         <file>phong.frag</file>
         <file>simple_texture.frag</file>
         <file>normal_map.frag</file>
+        <file>part.frag</file>
+        <file>pp.frag</file>
     </qresource>
 </RCC>

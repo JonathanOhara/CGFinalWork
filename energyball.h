@@ -27,6 +27,8 @@ private:
     QMatrix4x4 initialTransformation;
     float speed;
 
+    float initialScale;
+
 };
 
 #endif // ENERGYBALL_H

@@ -6,7 +6,7 @@ GamePlayer::GamePlayer( Entity * entity, char scenarioID ){
     this->entity = entity;
     this->scenarioID = scenarioID;
 
-    energyCoolDown = 0;
+    energyCoolDown = 50;
     movingKey = 0;
 
     energyPower = 1;

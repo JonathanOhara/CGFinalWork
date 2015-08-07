@@ -1,3 +1,10 @@
+vertex_program vertexParticle glsl{
+	source :shaders/vert/part.vert
+}
+fragment_program fragmentParticle glsl{
+	source :shaders/frag/part.frag
+}
+
 material energy_ball_material 
 {
     receive_shadows on 
@@ -28,8 +35,13 @@ material energy_ball_material
             shading gouraud
             transparent_sorting on
 
-            texture_unit 
-            {
+			vertex_program_ref vertexParticle{
+			}
+			
+			fragment_program_ref fragmentParticle{
+			}
+			
+            texture_unit {
                 texture energy_ball.png
                 tex_address_mode wrap
                 scale 1.0 1.0

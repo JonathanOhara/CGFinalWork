@@ -8,7 +8,9 @@ EnergyBall::EnergyBall(QVector3D direction, QVector3D position, float energyPowe
     this->energyPower = energyPower;
     this->caster = caster;
 
-    entity = new Entity( "energy_ball" , "bomb.mesh.xml");
+    initialScale = 0.2f;
+
+    entity = new Entity( "energy_ball" , "energy_ball.xml");
     entity->setPosition( QVector3D( round( this->position.x() ), 0.25f, round( this->position.z() ) ) );
 
     if( direction.x() == 1 ){
@@ -23,7 +25,9 @@ EnergyBall::EnergyBall(QVector3D direction, QVector3D position, float energyPowe
 
     initialTransformation = entity->getTransformation();
 
-    entity->setScale( QVector3D(0.1f * energyPower, 0.1f * energyPower, 0.1f * energyPower) );
+    entity->setScale( QVector3D(initialScale * energyPower,
+                                initialScale * energyPower,
+                                initialScale * energyPower) );
 
     speed = 18;
 }
@@ -35,7 +39,9 @@ void EnergyBall::reScale(){
     QVector3D pos = entity->getPosition();
     entity->setTransformation(initialTransformation);
     entity->setPosition(pos);
-    entity->setScale( QVector3D(0.1f * energyPower, 0.1f * energyPower, 0.1f * energyPower) );
+    entity->setScale( QVector3D(initialScale * energyPower,
+                                initialScale * energyPower,
+                                initialScale * energyPower) );
 }
 
 void EnergyBall::update(float elasedTime){
