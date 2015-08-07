@@ -29,6 +29,8 @@ void OpenGLWidget :: initializeGL () {
     std :: cerr << " Version " << glGetString ( GL_VERSION ) <<"\n";
     std :: cerr << " GLSL " << glGetString ( GL_SHADING_LANGUAGE_VERSION )<<"\n";
     glEnable ( GL_DEPTH_TEST );
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     connect (&timer , SIGNAL ( timeout () ) , this , SLOT ( animate () ) ) ;
 
