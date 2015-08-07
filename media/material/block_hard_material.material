@@ -1,4 +1,9 @@
-// block_hard_material genrated by blender2ogre 0.6.0
+vertex_program SimpleTexture glsl{
+	source :shaders/vert/simple_texture.vert
+}
+fragment_program SimpleTexture glsl{
+	source :shaders/frag/simple_texture.frag
+}
 
 material block_hard_material 
 {
@@ -30,8 +35,13 @@ material block_hard_material
             shading gouraud
             transparent_sorting on
 
-            texture_unit 
-            {
+			vertex_program_ref SimpleTexture{
+			}
+			
+			fragment_program_ref SimpleTexture{
+			}
+			
+            texture_unit{
                 texture block_hard_uv.png
                 tex_address_mode wrap
                 scale 1.0 1.0

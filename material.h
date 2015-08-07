@@ -13,7 +13,8 @@ public :
     QVector4D specular ;
 
     QString textureName;
-    QOpenGLTexture * texture ;
+    QString map1Name;
+    QOpenGLTexture *texture, *map1 ;
 
     double shininess ;
 };

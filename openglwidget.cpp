@@ -3,6 +3,8 @@
 OpenGLWidget::OpenGLWidget ( QWidget * parent ):  QOpenGLWidget ( parent ) {
     player1 = NULL;
     player2 = NULL;
+
+    flushProgressBar = 0;
 }
 
 OpenGLWidget::~OpenGLWidget (){
@@ -70,6 +72,11 @@ void OpenGLWidget :: paintGL () {
 
 //        qDebug() << "paintGL 4";
 
+        if( !obj->live ){
+            object++;
+            continue;
+        }
+
         obj->getShaderProgram()->bind();
 //        qDebug() << "paintGL 5";
 
@@ -124,6 +131,11 @@ void OpenGLWidget :: paintGL () {
         obj->getMaterial()->texture -> bind (0) ;
         obj->getShaderProgram() -> setUniformValue ("colorTexture", 0) ;
 
+        if( obj->getMaterial()->map1 != NULL ){
+            obj->getMaterial()->map1 -> bind (1) ;
+            obj->getShaderProgram() -> setUniformValue ("colorMap", 1);
+        }
+
 //        qDebug() << "paintGL 13";
 
         glDrawElements ( GL_TRIANGLES , obj->getFacesCount() * 3 , GL_UNSIGNED_INT , 0) ;
@@ -135,6 +147,10 @@ void OpenGLWidget :: paintGL () {
         obj->getVboIndices()->release();
         obj->getVbocoordText()->release();
         obj->getMaterial()->texture->release(0);
+
+        if( obj->getMaterial()->map1 != NULL ){
+            obj->getMaterial()->map1->release(1);
+        }
 
 //        qDebug() << "paintGL 15";
 
@@ -157,33 +173,57 @@ void OpenGLWidget::keyPressEvent( QKeyEvent * event ){
     switch(event->key()){
         case Qt::Key_Escape:
             qApp->quit();
+            return;
         break;
+    }
 
+    if( player1 == NULL && player2 == NULL ){
+        return;
+    }
+    EnergyBall * ball;
+
+    switch(event->key()){
         case Qt::Key_W:
-            if( player1 != NULL ) player1->startMoveUp();
+            player1->startMoveUp();
         break;
         case Qt::Key_A:
-            if( player1 != NULL ) player1->startMoveLeft();
+            player1->startMoveLeft();
         break;
         case Qt::Key_S:
-            if( player1 != NULL ) player1->startMoveDown();
+            player1->startMoveDown();
         break;
         case Qt::Key_D:
-            if( player1 != NULL ) player1->startMoveRight();
+            player1->startMoveRight();
         break;
+        case Qt::Key_Space:
+             ball = player1->castEnergyBall();
 
+            if( ball != NULL ){
+                energyBalls.push_back( ball );
+                objects.push_back( ball->entity );
+            }
+        break;
         case Qt::Key_Up:
-            if( player2 != NULL ) player2->startMoveUp();
+            player2->startMoveUp();
         break;
         case Qt::Key_Left:
-            if( player2 != NULL ) player2->startMoveLeft();
+            player2->startMoveLeft();
         break;
         case Qt::Key_Down:
-            if( player2 != NULL ) player2->startMoveDown();
+            player2->startMoveDown();
         break;
         case Qt::Key_Right:
-            if( player2 != NULL ) player2->startMoveRight();
+            player2->startMoveRight();
         break;
+        case Qt::Key_Enter:
+            ball = player2->castEnergyBall();
+
+            if( ball != NULL ){
+                energyBalls.push_back( ball );
+                objects.push_back( ball->entity );
+            }
+        break;
+
     }
 }
 
@@ -233,9 +273,167 @@ void OpenGLWidget :: mouseReleaseEvent ( QMouseEvent * event ){
 }
 //----------------------------------------------------------------------------------------------
 void OpenGLWidget::gameLogic(float deltaTime){
+    Entity* e2;
+    std::list<Entity*>::iterator object;
+    flushProgressBar += deltaTime;
 
-    if( player1 != NULL ) player1->update(deltaTime);
-    if( player2 != NULL ) player2->update(deltaTime);
+    if( player1 != NULL ){
+        player1->update(deltaTime);
+        if( flushProgressBar > 0.25 ){
+            emit player1CoolDown( (int) player1->energyCoolDown );
+        }
+    }
+
+    if( player2 != NULL ){
+        player2->update(deltaTime);
+        if( flushProgressBar > 0.25 ){
+            emit player2CoolDown( (int) player2->energyCoolDown );
+        }
+    }
+
+    if( flushProgressBar > 0.250 ){
+        flushProgressBar -= 0.25;
+    }
+
+    std::list<EnergyBall*>::iterator energyBall = energyBalls.begin();
+    EnergyBall* ball;
+
+    while( energyBall != energyBalls.end() ){
+        ball = (*energyBall);
+
+        if( !ball->entity->live ){
+            energyBall++;
+            continue;
+        }
+
+        ball->update( deltaTime );
+
+        object = objects.begin();
+        while( object != objects.end() ){
+            e2 = (*object);
+
+            if( !e2->live ){
+                object++;
+                continue;
+            }
+
+            if( ball->entity != e2 ){
+                if( energyBallcollides( ball, e2 ) ){
+                    break;
+                }
+            }
+            object++;
+        }
+        energyBall++;
+    }
+
+    object = objects.begin();
+
+    while( object != objects.end() ){
+        e2 = (*object);
+
+        if( !e2->live ){
+            object++;
+            continue;
+        }
+        if( player1->entity != e2 ){
+            playercollides( player1, e2);
+        }
+
+        if( player2->entity != e2 ){
+            playercollides( player2, e2);
+        }
+
+        object++;
+    }
+}
+
+bool OpenGLWidget::energyBallcollides(EnergyBall *eb, Entity *e2){
+    bool collision = false;
+
+    float ballPower = eb->energyPower;
+
+    float distance = sqrt( pow( eb->entity->getPosition().x() - e2->getPosition().x(), 2 ) + pow( eb->entity->getPosition().z() - e2->getPosition().z(), 2 ) );
+
+    if( distance < 0.2 * eb->energyPower ){
+
+        if( e2->getName() == "hard_block" ){
+            eb->entity->live = false;
+        }else if( e2->getName() == "normal_block" ){
+            eb->entity->live = false;
+            Scenario::destroyBlock(  eb->caster , e2->getPosition().x(), e2->getPosition().y(), e2->getPosition().z() );
+            e2->live = false;
+        }else if( e2->getName() == "bomberman" ){
+            if( eb->caster->entity != e2 ){
+                eb->entity->live = false;
+                QMessageBox msgBox;
+                msgBox.setText("Fim de Jogo. Jonathan Venceu!");
+                msgBox.exec();
+            }
+        }else if( e2->getName() == "bomberman2" ){
+            if( eb->caster->entity != e2 ){
+                eb->entity->live = false;
+                QMessageBox msgBox;
+                msgBox.setText("Fim de Jogo. Jonathan Venceu!!!");
+                msgBox.exec();
+            }
+        }else if( e2->getName() == "energy_ball" ){
+            std::list<EnergyBall*>::iterator energyBall = energyBalls.begin();
+            EnergyBall* ball;
+
+            while( energyBall != energyBalls.end() ){
+                ball = (*energyBall);
+
+                if( e2 == ball->entity ){
+                    if( eb->energyPower == ball->energyPower ){
+                        eb->entity->live = false;
+                        ball->entity->live = false;
+                        break;
+                    }else if( eb->energyPower > ball->energyPower ){
+                        eb->energyPower -= ball->energyPower;
+                        eb->reScale();
+                        ball->entity->live = false;
+                    }else if( eb->energyPower < ball->energyPower ){
+                        ball->energyPower -= eb->energyPower;
+                        ball->reScale();
+                        eb->entity->live = false;
+                    }
+                }
+
+                energyBall++;
+            }
+        }
+
+
+        collision = true;
+    }
+
+    return collision;
+}
+
+bool OpenGLWidget::playercollides(GamePlayer *gp, Entity *e2){
+    bool collision = false;
+    float distance = sqrt( pow( gp->entity->getPosition().x() - e2->getPosition().x(), 2 ) + pow( gp->entity->getPosition().z() - e2->getPosition().z(), 2 ) );
+
+    if( distance < 0.5f ){
+        if( e2->getName() == "buff_powerup" ){
+            gp->buffEnergyPower();
+
+            Scenario::destroyPowerUp( gp, e2->getPosition().x(), e2->getPosition().y(), e2->getPosition().z() );
+            e2->live = false;
+        }else if( e2->getName() == "buff_cdup" ){
+            gp->buffEnergyCoolDown();
+
+            Scenario::destroyPowerUp( gp, e2->getPosition().x(), e2->getPosition().y(), e2->getPosition().z() );
+            e2->live = false;
+        }else if( e2->getName() == "buff_speedup" ){
+            gp->buffWalkSpeed();
+
+            Scenario::destroyPowerUp( gp, e2->getPosition().x(), e2->getPosition().y(), e2->getPosition().z() );
+            e2->live = false;
+        }
+    }
+    return collision;
 }
 
 void OpenGLWidget::loadLevel(){
@@ -244,8 +442,6 @@ void OpenGLWidget::loadLevel(){
 
     camera.eye = QVector3D( COLUMNS / 2, 10.0f, -1.0f );
     camera.at  = QVector3D( COLUMNS / 2, 0.0f, LINES / 2 * - 1 + 0.5f);
-
-    qDebug() << light.position;
 
     Entity * field = new Entity( "field", "scenario_green.mesh.xml" );
     field->translate( QVector3D(6, -1.0f ,0) );
@@ -258,6 +454,7 @@ void OpenGLWidget::loadLevel(){
             Entity * ent = NULL;
 
             switch( Scenario::cenario[i][j] ){
+
             case 'X':
                 ent = new Entity( "hard_block", "block_hard.mesh.xml" );
 
@@ -269,8 +466,33 @@ void OpenGLWidget::loadLevel(){
                 ent->setScale( QVector3D( 0.5f, 0.5f, 0.5f ) );
 
                 break;
+
+
+            case 'P':
+                ent = new Entity( "buff_powerup", "buff_powerup.mesh.xml" );
+                ent->rotate(-90, QVector3D(1, 0, 0));
+                ent->setScale( QVector3D( 0.5f, 0.5f, 0.5f ) );
+
+                break;
+            case 'C':
+                ent = new Entity( "buff_cdup", "buff_cdup.mesh.xml" );
+                ent->rotate(-90, QVector3D(1, 0, 0));
+                ent->setScale( QVector3D( 0.5f, 0.5f, 0.5f ) );
+
+                break;
+            case 'S':
+                ent = new Entity( "buff_speedup", "buff_speedup.mesh.xml" );
+                ent->rotate(-90, QVector3D(1, 0, 0));
+                ent->setScale( QVector3D( 0.5f, 0.5f, 0.5f ) );
+
+                break;
+
+
+
+
             case 'H':
                 ent = new Entity("bomberman", "bomberman.mesh.xml");
+                ent->rotate(180, QVector3D(0, 1, 0) );
                 ent->setScale(QVector3D(0.25f, 0.25f, 0.25f) );
 
                 if(player1 == NULL){
@@ -279,7 +501,7 @@ void OpenGLWidget::loadLevel(){
 
                 break;
             case 'E':
-                ent = new Entity("bomberman2", "bomberman.mesh.xml");
+                ent = new Entity("bomberman2", "bomberman2.mesh.xml");
                 ent->setScale(QVector3D(0.25f, 0.25f, 0.25f) );
 
                 if(player2 == NULL){
@@ -297,13 +519,4 @@ void OpenGLWidget::loadLevel(){
        // if( i == 2 )break;
     }
     qDebug() << " Level Load End...";
-
-
-
-    Entity * sq = new Entity("sq", "square.xml");
-    sq->setPosition( QVector3D( 7.0, 0, -7 ) );
-    sq->setScale( QVector3D( 0.5f, 0.5f, 0.5f ) );
-    sq->rotate( -90, QVector3D(1, 0, 0) );
-    objects.push_back( sq );
-
 }

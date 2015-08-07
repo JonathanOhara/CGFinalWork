@@ -7,7 +7,7 @@
 #include <iostream>
 #include <string>
 
-
+#include <math.h>
 #include "light.h"
 #include "material.h"
 #include "camera.h"
@@ -51,6 +51,9 @@ protected:
     void gameLogic( float deltaTime );
 
 private:
+    bool energyBallcollides( EnergyBall* eb, Entity *e2 );
+    bool playercollides( GamePlayer* gp, Entity *e2 );
+
     QTimer timer;
     QElapsedTimer elapsedTime;
 
@@ -67,10 +70,15 @@ private:
 
     std::list<Entity*> objects;
 
+    std::list<EnergyBall*> energyBalls;
+
     GamePlayer *player1, *player2;
 
+    float flushProgressBar;
+
 signals :
-    void statusBarMessage ( QString ns ) ;
+    void player1CoolDown ( int cd ) ;
+    void player2CoolDown ( int cd ) ;
 
 public slots :
     /*

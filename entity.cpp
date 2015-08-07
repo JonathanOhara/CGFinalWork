@@ -27,6 +27,8 @@ Entity::Entity(string name, string fileName){
     createVBOs();
 
     transformation.setToIdentity() ;
+
+    live = true;
 }
 
 Entity::~Entity(){
@@ -44,7 +46,7 @@ void Entity::readMeshXml(){
     path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
     path += "/CGFinalWork/media/mesh/" + QString(fileName.c_str());
 
-    qDebug() << "Loading mesh: " <<path;
+    qDebug() << "Loading mesh: " << path;
     std::ifstream if2( path.toStdString().c_str(), std::ifstream::in);
 
     std::vector<char> buffer((std::istreambuf_iterator<char>(if2)), std::istreambuf_iterator<char>( ));
@@ -59,13 +61,11 @@ void Entity::readMeshXml(){
     vertexBuffer = geometry->first_node("vertexbuffer");
 
     vertexCount = atoi( geometry->first_attribute("vertexcount")->value() );
-    qDebug() << "Vertex Count: " << vertexCount;
 
     vertices = new QVector4D[ vertexCount ];
     normals = new QVector3D[ vertexCount ];
     textureCoordinates = new QVector2D[ vertexCount ];
 
-    qDebug() << "Loading vertices...";
     i = 0;
     for ( child = vertexBuffer->first_node("vertex"); child; child = child->next_sibling()){
 
@@ -94,12 +94,7 @@ void Entity::readMeshXml(){
         i++;
     }
 
-    qDebug() << "Done.";
-
     subMesh = subMeshes->first_node("submesh");
-
-    materialName = subMesh->first_attribute("material")->value();
-    qDebug() << "Material Name: " << materialName.c_str();
 
     faces = subMesh->first_node("faces");
 
@@ -107,7 +102,6 @@ void Entity::readMeshXml(){
 
     indices = new unsigned int[ facesCount * 3 ];
 
-    qDebug() << "Loading faces...";
     i = 0;
     for ( child = faces->first_node("face"); child; child = child->next_sibling()){
         indices [ i * 3 ] = atoi( child->first_attribute("v1")->value() );
@@ -116,13 +110,10 @@ void Entity::readMeshXml(){
 
         i++;
     }
-    qDebug() << "Done.";
 
     if( skeletonLink != NULL ){
         skeletonFileName = skeletonLink->first_attribute("name")->value();
-        qDebug() << "Skeleton File Name: " << skeletonFileName.c_str();
 
-        qDebug() << "Loading bone assigments...";
         i = 0;
         for ( child = faces->first_node("vertexboneassignment"); child; child = child->next_sibling()){
 
@@ -132,9 +123,9 @@ void Entity::readMeshXml(){
 
             i++;
         }
-        qDebug() << "Done.";
     }
 
+    materialName = subMesh->first_attribute("material")->value();
 }
 
 void Entity::readMaterial(){
@@ -146,17 +137,21 @@ void Entity::readMaterial(){
     path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
     path += "/CGFinalWork/media/material/" + QString(materialName.c_str()) + ".material";
 
-    qDebug() << path;
+    qDebug() << "Loading material file: " << path;
     ifstream ifs( path.toStdString().c_str(), std::ifstream::in);
 
     sh::ConfigLoader * loader = new sh::ConfigLoader("");
     loader->parseScript(ifs);
 
-    sh::ConfigNode *rootNode, *techniqueNode, *passNode, *textureUnitNode, *ambient, *diffuse, *specular, *emissive;
+    sh::ConfigNode *rootNode, *vertexProgram, *fragmentProgram, *techniqueNode, *passNode, *textureUnitNode, *ambient, *diffuse, *specular, *emissive, *vertexProgramRef, *fragmentProgramRef;
 
     rootNode = loader->getConfigScript("material", materialName);
     techniqueNode = rootNode->findChild("technique");
     passNode = techniqueNode->findChild("pass");
+
+    vertexProgramRef = passNode->findChild("vertex_program_ref");
+    fragmentProgramRef = passNode->findChild("fragment_program_ref");
+
     textureUnitNode = passNode->findChild("texture_unit");
 
     ambient = passNode->findChild("ambient");
@@ -186,6 +181,7 @@ void Entity::readMaterial(){
     );
 
     material->textureName = textureUnitNode->findChild("texture")->getValue().c_str();
+    material->map1Name = textureUnitNode->findChild("map1") != NULL ? textureUnitNode->findChild("map1")->getValue().c_str() : "";
 
     path = QDir::currentPath();
     path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
@@ -201,33 +197,57 @@ void Entity::readMaterial(){
     material->texture->setMagnificationFilter( QOpenGLTexture::Linear ) ;
     material->texture->setWrapMode( QOpenGLTexture::Repeat ) ;
 
-    int currentShader = 0;
+    if( material->map1Name != "" ){
+        path = QDir::currentPath();
+        path.remove( path.lastIndexOf("/"), path.length() - path.lastIndexOf("/") );
+        path += "/CGFinalWork/media/images/" + material->map1Name;
 
-    QString vertexShaderFile [] = {
-         ":/shaders/vert/phong.vert"
-     };
-     QString fragmentShaderFile [] = {
-         ":/shaders/frag/phong.frag"
-     };
-     vertexShader = new QOpenGLShader ( QOpenGLShader :: Vertex ) ;
+        qDebug() << "Loading image: " << path;
 
-     qDebug() << "Loading " << vertexShaderFile [currentShader ] << " and "
-              << fragmentShaderFile [currentShader ];
+        QImage image;
+        image . load ( path ) ;
 
-     if (! vertexShader -> compileSourceFile ( vertexShaderFile [currentShader ]) )
-         qWarning () << vertexShader -> log () ;
+        material->map1 = new QOpenGLTexture ( image ) ;
+        material->map1->setMinificationFilter( QOpenGLTexture::LinearMipMapLinear ) ;
+        material->map1->setMagnificationFilter( QOpenGLTexture::Linear ) ;
+        material->map1->setWrapMode( QOpenGLTexture::Repeat ) ;
+    }
 
-     fragmentShader = new QOpenGLShader ( QOpenGLShader :: Fragment ) ;
+    vertexProgram = loader->getConfigScript("vertex_program", vertexProgramRef != NULL ? vertexProgramRef->getValue(): "" );
+    fragmentProgram = loader->getConfigScript("fragment_program", fragmentProgramRef != NULL ? fragmentProgramRef->getValue(): "" );
 
-     if (! fragmentShader -> compileSourceFile ( fragmentShaderFile [currentShader ]) )
-         qWarning () << fragmentShader -> log () ;
+    QString vertexShaderFile;
+    QString fragmentShaderFile;
 
-     shaderProgram = new QOpenGLShaderProgram ;
-     shaderProgram -> addShader ( vertexShader ) ;
-     shaderProgram -> addShader ( fragmentShader ) ;
 
-     if (! shaderProgram -> link () )
-         qWarning () << shaderProgram -> log () << endl ;
+    if( vertexProgram != NULL && fragmentProgram != NULL ){
+        vertexShaderFile = vertexProgram->findChild("source")->getValue().c_str();
+        fragmentShaderFile = fragmentProgram->findChild("source")->getValue().c_str();
+    }else{
+        qDebug() << "No shader. Using simple texture shader...";
+
+        vertexShaderFile = ":shaders/vert/simple_texture.vert";
+        fragmentShaderFile = ":shaders/frag/simple_texture.frag";
+    }
+
+    vertexShader = new QOpenGLShader ( QOpenGLShader :: Vertex ) ;
+
+    qDebug() << "Loading Shaders: " << vertexShaderFile << " and " << fragmentShaderFile;
+
+    if (!vertexShader->compileSourceFile ( vertexShaderFile ) )
+        qWarning () << vertexShader -> log () ;
+
+    fragmentShader = new QOpenGLShader ( QOpenGLShader :: Fragment ) ;
+
+    if (!fragmentShader->compileSourceFile ( fragmentShaderFile ) )
+        qWarning () << fragmentShader -> log () ;
+
+    shaderProgram = new QOpenGLShaderProgram ;
+    shaderProgram -> addShader ( vertexShader ) ;
+    shaderProgram -> addShader ( fragmentShader ) ;
+
+    if (! shaderProgram -> link () )
+        qWarning () << shaderProgram -> log () << endl ;
 
     delete loader;
 }
@@ -256,9 +276,10 @@ void Entity::generateTangents () {
         M (1 ,0) = - st2 . x () ; M (1 ,1) = st1 . x () ;
         M *= (1.0 / ( st1 . x () * st2 . y () - st2 . x () * st1 . y () ) ) ;
 
-        QVector4D T = QVector4D ( M (0 ,0) * P . x () + M (0 ,1) * Q . x () ,
+        QVector4D T = QVector4D
+          ( M (0 ,0) * P . x () + M (0 ,1) * Q . x () ,
             M (0 ,0) * P . y () + M (0 ,1) * Q . y () ,
-            M (0 ,0) * P . z () + M (0 ,1) * Q . z () , 0.0);
+            M (0 ,0) * P . z () + M (0 ,1) * Q . z () , 0.0 );
 
         QVector3D B = QVector3D ( M (1 ,0) * P . x () + M (1 ,1) * Q . x () ,
         M (1 ,0) * P . y () + M (1 ,1) * Q . y () ,
@@ -274,12 +295,10 @@ void Entity::generateTangents () {
     for ( unsigned int i = 0; i < vertexCount ; i ++) {
         const QVector3D & n = normals [ i ];
         const QVector4D & t = tangents [ i ];
-        tangents [ i ] = ( t - n *
-        QVector3D :: dotProduct (n , t . toVector3D () ) ) .
-        normalized () ;
+        tangents[ i ] = ( t - n *  QVector3D::dotProduct ( n , t.toVector3D() ) ) .normalized () ;
         QVector3D b = QVector3D :: crossProduct (n , t . toVector3D () ) ;
         double hand = QVector3D :: dotProduct (b , bitangents [ i ]) ;
-        tangents [ i ]. setW (( hand < 0.0) ? -1.0 : 1.0) ;
+        tangents[ i ]. setW (( hand < 0.0) ? -1.0 : 1.0) ;
     }
     delete [] bitangents ;
 }
@@ -446,6 +465,9 @@ QOpenGLShaderProgram * Entity::getShaderProgram(){
 }
 QMatrix4x4 Entity::getTransformation(){
     return transformation;
+}
+void Entity::setTransformation(QMatrix4x4 transformation){
+    this->transformation = transformation;
 }
 Material * Entity::getMaterial(){
     return material;

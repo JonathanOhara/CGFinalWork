@@ -11,6 +11,7 @@ uniform float shininess ;
 
 uniform sampler2D colorTexture ;
 
+
 out vec4 frag_color ;
 
 void main (){

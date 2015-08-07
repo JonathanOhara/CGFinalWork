@@ -5,17 +5,17 @@ fragment_program fragmentPhong glsl{
 	source :shaders/frag/phong.frag
 }
 
-material bomberman_material 
+material bomberman2_material 
 {
     receive_shadows on 
 
     technique
     {
-        pass bomberman_material
+        pass bomberman2_material
         {
-            ambient 0.800000011920929 0.800000011920929 0.800000011920929 1.0
+            ambient 0.3 0.3 0.3 1.0
             diffuse 0.6400000190734865 0.6400000190734865 0.6400000190734865 1.0
-            specular 0.5 0.5 0.5 1.0 12.5
+            specular 0.5 0.5 0.5 1.0 1.0
             emissive 0.0 0.0 0.0 1.0
 
             alpha_to_coverage off
@@ -42,7 +42,7 @@ material bomberman_material
 			}
 			
             texture_unit{
-                texture Bomberman_uv.png
+                texture Bomberman2_uv.png
                 tex_address_mode wrap
                 scale 1.0 1.0
                 tex_coord_set 0

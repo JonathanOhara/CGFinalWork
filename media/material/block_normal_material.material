@@ -1,4 +1,9 @@
-// block_normal_material genrated by blender2ogre 0.6.0
+vertex_program normalMap glsl{
+	source :shaders/vert/normal_map.vert
+}
+fragment_program normalMap glsl{
+	source :shaders/frag/normal_map.frag
+}
 
 material block_normal_material 
 {
@@ -29,10 +34,16 @@ material block_normal_material
             scene_blend_op add
             shading gouraud
             transparent_sorting on
+			
+			vertex_program_ref normalMap{
+			}
+			
+			fragment_program_ref normalMap{
+			}
 
-			texture_unit 
-            {
+			texture_unit {
                 texture block_normal_uv.png
+				map1 block_normal_nm.png
                 tex_address_mode wrap
                 scale 1.0 1.0
                 tex_coord_set 0

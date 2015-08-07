@@ -47,6 +47,7 @@ public:
     void rotate( float angle, QVector3D vector );
     void translate( QVector3D translate );
     QMatrix4x4 getTransformation();
+    void setTransformation(QMatrix4x4 transformation);
 
     Material * getMaterial();
 
@@ -54,6 +55,7 @@ public:
     int getVertexCount();
     int getFacesCount();
 
+    bool live;
 
 private:
     void readMeshXml();
@@ -86,7 +88,7 @@ private:
 
     QMatrix4x4 transformation;
 
-    Material * material;
+    Material *material;
 
     string materialName;
     int vertexCount;

@@ -22,7 +22,8 @@ SOURCES +=\
     main.cpp \
     entity.cpp \
     gamePlayer.cpp \
-    scenario.cpp
+    scenario.cpp \
+    energyball.cpp
 
 HEADERS  += mainwindow.h \
     openglwidget.h \
@@ -36,7 +37,8 @@ HEADERS  += mainwindow.h \
     rapidxml_utils.hpp \
     entity.h \
     gamePlayer.h \
-    scenario.h
+    scenario.h \
+    energyball.h
 
 FORMS    += mainwindow.ui
 

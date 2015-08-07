@@ -8,20 +8,26 @@
 #include <string>
 #include <QDebug>
 
+class GamePlayer;
+
 class Scenario
 {
 public:
     static char cenario[LINES][COLUMNS];
 
-    static bool canMoveUp( const char id, float x, float y, float z );
-    static bool canMoveLeft( const char id, float x, float y, float z );
-    static bool canMoveRight( const char id, float x, float y, float z );
-    static bool canMoveDown( const char id, float x, float y, float z );
+    static bool canMoveUp( GamePlayer *player, float x, float y, float z );
+    static bool canMoveLeft( GamePlayer *player, float x, float y, float z );
+    static bool canMoveRight( GamePlayer *player, float x, float y, float z );
+    static bool canMoveDown( GamePlayer *player, float x, float y, float z );
 
-    static void updateScenario( const char id, float x, float y, float z );
+    static void updateScenario( GamePlayer *player, float x, float y, float z );
+
+    static void destroyBlock( GamePlayer *player,float x, float y, float z );
+    static void destroyPowerUp( GamePlayer *player,float x, float y, float z );
 
 private:
     static int* findPosition( char id );
+    static bool isPowerUp( char c );
     static void print();
 };
 

@@ -1,4 +1,9 @@
-// scenario_green_material genrated by blender2ogre 0.6.0
+vertex_program SimpleTexture glsl{
+	source :shaders/vert/simple_texture.vert
+}
+fragment_program SimpleTexture glsl{
+	source :shaders/frag/simple_texture.frag
+}
 
 material scenario_green_material 
 {
@@ -29,6 +34,12 @@ material scenario_green_material
             scene_blend_op add
             shading gouraud
             transparent_sorting on
+			
+			vertex_program_ref SimpleTexture{
+			}
+			
+			fragment_program_ref SimpleTexture{
+			}
 
             texture_unit 
             {

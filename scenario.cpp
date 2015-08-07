@@ -1,35 +1,39 @@
 #include "scenario.h"
+#include "gamePlayer.h"
 
 char Scenario::cenario[LINES][COLUMNS] = {
     {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'},
-    {'X','.','H','.','B','B','B','.','B','B','B','.','.','.','X'},
+    {'X','H','.','.','B','B','B','C','B','B','B','S','.','P','X'},
     {'X','.','X','B','X','B','X','B','X','B','X','B','X','.','X'},
-    {'X','.','B','.','B','B','B','B','B','B','B','.','B','B','X'},
-    {'X','B','X','B','X','.','X','.','X','.','X','B','X','B','X'},
+    {'X','.','B','C','B','B','B','B','B','B','B','.','B','B','X'},
+    {'X','B','X','B','X','P','X','S','X','S','X','B','X','B','X'},
     {'X','B','B','B','B','B','B','.','B','B','B','B','B','B','X'},
-    {'X','.','X','B','X','.','X','.','X','.','X','B','X','.','X'},
+    {'X','.','X','B','X','P','X','P','X','P','X','B','X','.','X'},
     {'X','B','B','B','B','B','B','.','B','B','B','B','B','B','X'},
-    {'X','B','X','B','X','.','X','.','X','.','X','B','X','B','X'},
-    {'X','.','B','.','B','B','B','B','B','B','B','.','B','.','X'},
+    {'X','B','X','B','X','S','X','S','X','P','X','B','X','B','X'},
+    {'X','.','B','.','B','B','B','B','B','B','B','C','B','.','X'},
     {'X','.','X','B','X','B','X','B','X','B','X','B','X','.','X'},
-    {'X','.','.','.','B','B','B','.','B','B','B','.','.','E','X'},
+    {'X','P','.','S','B','B','B','C','B','B','B','.','.','E','X'},
     {'X','X','X','X','X','X','X','X','X','X','X','X','X','X','X'},
 };
 
-bool Scenario::canMoveUp( const char id, float x, float y, float z){
-    int * position = findPosition(id);
+bool Scenario::canMoveUp( GamePlayer *player, float x, float y, float z){
+    int * position = findPosition( player->scenarioID );
 
     int line = trunc(z + LINES);
     int column = position[1];
 
     delete[] position;
 
+    char c;
     if( z + LINES == line){
-        if( Scenario::cenario[ line - 1 ][ column ] == '.' ){
+        c = Scenario::cenario[ line - 1 ][ column ];
+        if( c == '.' || isPowerUp(c) ){
             return true;
         }
     }else{
-        if( Scenario::cenario[ line ][ column ] == '.' || Scenario::cenario[ line ][ column ] == id ){
+        c = Scenario::cenario[ line ][ column ];
+        if( c == '.' || isPowerUp(c) || c == player->scenarioID ){
             return true;
         }
     }
@@ -37,20 +41,23 @@ bool Scenario::canMoveUp( const char id, float x, float y, float z){
     return false;
 }
 
-bool Scenario::canMoveLeft(const char id, float x, float y, float z){
-    int * position = findPosition(id);
+bool Scenario::canMoveLeft(GamePlayer *player, float x, float y, float z){
+    int * position = findPosition( player->scenarioID );
 
 
     int line = position[0];
     int column = trunc(x);
     delete[] position;
 
+    char c;
     if( x == column ){
-        if( Scenario::cenario[ line ][ column -1 ] == '.' ){
+        c = Scenario::cenario[ line ][ column -1 ];
+        if( c == '.' || isPowerUp(c)  ){
             return true;
         }
     }else{
-        if( Scenario::cenario[ line ][ column ] == '.' || Scenario::cenario[ line ][ column ] == id ){
+        c = Scenario::cenario[ line ][ column ];
+        if( c == '.' || isPowerUp(c)  || c == player->scenarioID ){
             return true;
         }
     }
@@ -58,20 +65,23 @@ bool Scenario::canMoveLeft(const char id, float x, float y, float z){
     return false;
 }
 
-bool Scenario::canMoveRight( const char id, float x, float y, float z){
-    int * position = findPosition(id);
+bool Scenario::canMoveRight( GamePlayer *player, float x, float y, float z){
+    int * position = findPosition( player->scenarioID );
 
     int line = position[0];
     int column = ceil(x);
     delete[] position;
 
 
+    char c;
     if( x == column ){
-        if( Scenario::cenario[ line ][ column +1 ] == '.' ){
+        c = Scenario::cenario[ line ][ column +1 ];
+        if( c == '.' || isPowerUp(c)  ){
             return true;
         }
     }else{
-        if( Scenario::cenario[ line ][ column ] == '.' || Scenario::cenario[ line ][ column ] == id ){
+        c = Scenario::cenario[ line ][ column ];
+        if( c == '.' || isPowerUp(c)  || c == player->scenarioID ){
             return true;
         }
     }
@@ -79,19 +89,22 @@ bool Scenario::canMoveRight( const char id, float x, float y, float z){
     return false;
 }
 
-bool Scenario::canMoveDown(const char id, float x, float y, float z){
-    int * position = findPosition(id);
+bool Scenario::canMoveDown(GamePlayer *player, float x, float y, float z){
+    int * position = findPosition( player->scenarioID );
 
     int line = ceil(z + LINES);
     int column = position[1];
     delete[] position;
 
+    char c;
     if( z + LINES == line){
-        if( Scenario::cenario[ line + 1 ][ column ] == '.' ){
+        c = Scenario::cenario[ line + 1 ][ column ];
+        if( c == '.' || isPowerUp(c)  ){
             return true;
         }
     }else{
-        if( Scenario::cenario[ line ][ column ] == '.' || Scenario::cenario[ line ][ column ] == id ){
+        c = Scenario::cenario[ line ][ column ];
+        if( c == '.' || isPowerUp(c)  || c == player->scenarioID ){
             return true;
         }
     }
@@ -99,14 +112,32 @@ bool Scenario::canMoveDown(const char id, float x, float y, float z){
     return false;
 }
 
-void Scenario::updateScenario(const char id, float x, float y, float z){
-    int * position = findPosition(id);
+void Scenario::destroyBlock(GamePlayer *player, float x, float y, float z){
+    int line = (int)(z + LINES);
+    int column = (int)x;
+
+    Scenario::cenario[ line ][ column ] = '.';
+
+    //POWER UP CHANCE
+}
+
+void Scenario::destroyPowerUp(GamePlayer *player, float x, float y, float z){
+    int line = (int)(z + LINES);
+    int column = (int)x;
+
+    Scenario::cenario[ line ][ column ] = player->scenarioID;
+
+    //POWER UP CHANCE
+}
+
+void Scenario::updateScenario(GamePlayer *player, float x, float y, float z){
+    int * position = findPosition( player->scenarioID );
 
     int line = position[0];
     int column = position[1];
     delete[] position;
 
-    if( Scenario::cenario[line][column] == '.' || Scenario::cenario[line][column] == id ){
+    if( Scenario::cenario[line][column] == '.' || Scenario::cenario[line][column] == player->scenarioID ){
 
         int newLine = line;
         int newCoulmn = column;
@@ -115,7 +146,7 @@ void Scenario::updateScenario(const char id, float x, float y, float z){
         newLine = newLine + ( round(z) + LINES - line );
 
         Scenario::cenario[line][column] = '.';
-        Scenario::cenario[newLine][newCoulmn] = id;
+        Scenario::cenario[newLine][newCoulmn] = player->scenarioID;
     }
 }
 
@@ -138,6 +169,10 @@ int* Scenario::findPosition(char id){
 
 
     return position;
+}
+
+bool Scenario::isPowerUp(char c){
+    return c == 'P' || c == 'C' || c == 'S';
 }
 
 void Scenario::print(){

@@ -1,8 +1,12 @@
 <RCC>
     <qresource prefix="/shaders/vert">
         <file>phong.vert</file>
+        <file>simple_texture.vert</file>
+        <file>normal_map.vert</file>
     </qresource>
     <qresource prefix="/shaders/frag">
         <file>phong.frag</file>
+        <file>simple_texture.frag</file>
+        <file>normal_map.frag</file>
     </qresource>
 </RCC>

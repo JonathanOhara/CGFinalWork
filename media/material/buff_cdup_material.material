@@ -1,17 +1,10 @@
-vertex_program vertexPhong glsl{
-	source :shaders/vert/phong.vert
-}
-fragment_program fragmentPhong glsl{
-	source :shaders/frag/phong.frag
-}
-
-material bomberman_material 
+material buff_cdup_material 
 {
     receive_shadows on 
 
     technique
     {
-        pass bomberman_material
+        pass buff_cdup_material
         {
             ambient 0.800000011920929 0.800000011920929 0.800000011920929 1.0
             diffuse 0.6400000190734865 0.6400000190734865 0.6400000190734865 1.0
@@ -35,14 +28,9 @@ material bomberman_material
             shading gouraud
             transparent_sorting on
 
-			vertex_program_ref vertexPhong{
-			}
-			
-			fragment_program_ref fragmentPhong{
-			}
-			
-            texture_unit{
-                texture Bomberman_uv.png
+            texture_unit 
+            {
+                texture cdUp.png
                 tex_address_mode wrap
                 scale 1.0 1.0
                 tex_coord_set 0
